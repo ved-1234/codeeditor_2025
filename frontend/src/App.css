@@ -1,0 +1,24 @@
+body {
+    overflow: hidden;
+  }
+
+  
+
+
+  .CodeMirror {
+
+    font-size: 14px;
+    line-height: 1.6;
+    padding-top: 2px;
+    border: none;
+   
+    white-space: nowrap; /* Prevent wrapping of long lines */
+  }
+
+  .CodeMirror.video-active {
+    background: rgba(0, 0, 0, 0.8); /* Darken background */
+    color: #fff; /* Change text color */
+    font-size: 16px; /* Increase font size */
+    padding: 10px;
+    border-radius: 5px;
+  }
