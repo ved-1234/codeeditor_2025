@@ -15,11 +15,13 @@ const Editor = () => {
   const roomId = location.state?.roomId || "";
   const userName = location.state?.name || "";
   const token = location.state?.token || "";
-  const [code, setCode] = useState("");
+  
+  const [code, setCode] = useState(""); // ✅ Code updates automatically
   const [openDrawer, setOpenDrawer] = useState(null);
   const [users, setUsers] = useState([]);
   const [clicked, setClicked] = useState(false);
-  const codeRef = useRef("");
+  
+  const codeRef = useRef(""); // Stores latest code
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -44,7 +46,8 @@ const Editor = () => {
 
         setUsers(clients);
 
-        socketRef.current.emit("code_sync", {
+        // Send the latest code to the newly joined user
+        socketRef.current.emit("code_change", {
           code: codeRef.current,
           socketId,
         });
@@ -75,9 +78,17 @@ const Editor = () => {
         }
       });
 
+      // ✅ Listening for code changes from the editor
+      socketRef.current.on("codetext", ({ code }) => {
+        if (code !== null) {
+          setCode(code); // ✅ Update the editor
+          codeRef.current = code; // ✅ Keep track of the latest code
+        }
+      });
     };
 
     init();
+
 
     return () => {
       if (socketRef.current) {
@@ -85,6 +96,7 @@ const Editor = () => {
         socketRef.current.off("disconnected");
         socketRef.current.off("incoming-video-call");
         socketRef.current.off("video-call-response");
+        socketRef.current.off("code_change");
         socketRef.current.disconnect();
       }
     };
@@ -123,32 +135,35 @@ const Editor = () => {
     socketRef.current.emit("video-call-request", { roomId, from: userName });
   };
 
-  const compileCode = () => {
-    setCode(codeRef.current);
-  };
-
   if (!location.state) {
     return <Navigate to="/" />;
   }
 
   return (
     <div className="flex w-screen h-screen overflow-hidden bg-black">
+      {/* Sidebar */}
       <div className="pt-5 p-2 w-[3.5vw] bg-black h-screen flex flex-col items-center">
         <img src="/person_icon.png" onClick={() => toggleDrawer("person")} alt="Person Icon" className="pt-5 pb-5 w-full h-auto cursor-pointer" />
         <img src="/chat_icon.png" onClick={() => toggleDrawer("chat")} alt="Chat Icon" className="pt-5 pb-5 w-full h-auto cursor-pointer" />
         <img src="/file_icon.png" onClick={() => toggleDrawer("file")} alt="File Icon" className="pt-5 pb-5 w-full h-auto cursor-pointer" />
         <img src="/videocall.png" onClick={() => { toggleDrawer("video"); clickicon(); }} alt="Video Icon" className="pt-5 pb-5 w-full h-auto cursor-pointer" />
-        <img src="/compile_code.png" onClick={compileCode} alt="Compile Icon" className="pt-5 pb-5 w-full h-auto cursor-pointer" />
+        <img src="/compile_code.png" alt="Compile Icon" className="pt-5 pb-5 w-full h-auto cursor-pointer" />
       </div>
 
+      {/* Main Editor Section */}
       <div className="w-full h-full flex">
         <EditorComp
           socketRef={socketRef}
           roomId={roomId}
-          onCodeChange={(code) => { codeRef.current = code; }}
+          onCodeChange={(newCode) => { 
+            codeRef.current = newCode; 
+            setCode(newCode); // ✅ Code updates automatically
+            socketRef.current.emit("codetext", { roomId, code: newCode});
+          }}
         />
       </div>
 
+      {/* Side Drawers */}
       {openDrawer && (
         <div className="w-[40vw] h-screen bg-gray-900 text-white p-4">
           {openDrawer === "person" && <PersonDrawer users={users} onCopy={copyRoomID} onLeave={leaveRoom} />}
@@ -158,10 +173,10 @@ const Editor = () => {
         </div>
       )}
 
+      {/* ✅ Code gets compiled automatically */}
       <Compilation code={code} />
     </div>
   );
 };
 
 export default Editor;
-

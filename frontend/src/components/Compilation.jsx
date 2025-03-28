@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+
 const Compilation = ({ code }) => {
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);

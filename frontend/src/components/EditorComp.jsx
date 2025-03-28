@@ -56,7 +56,7 @@ const EditorComp = ({socketRef,roomId, onCodeChange}) => {
       socketRef.current.on('code_change',({code,from})=>{
         if(code !== null)
         {
-          
+          socketRef.current.emit("codetext",code)
           editorRef.current.setValue(code)
               
           // Get the line and position from editor and update cursor using that 

@@ -46,7 +46,7 @@ io.on("connection", (socket) => {
     userSocketMap[socket.id] = userName;
     socket.join(roomId);
     console.log(`${userName} joined room ${roomId}`);
-
+ 
     const clients = getAllClients(roomId);
     clients.forEach(({ socketId }) => {
       io.to(socketId).emit("joined", {
@@ -56,6 +56,16 @@ io.on("connection", (socket) => {
       });
     });
   });
+  socket.on("code_change", ({ roomId, code }) => {
+    // Broadcast to all clients in the same room EXCEPT the sender
+    socket.to(roomId).emit("code_change", { code });
+  });
+  socket.on("codetext",(code)=>{
+    console.log("both side code are same");
+    io.emit("codetext",code)
+  })
+
+  //handle codetext
 
   // Handle chat messages
   socket.on("Message", ({ roomId, message, sender }) => {
